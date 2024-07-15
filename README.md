@@ -16,5 +16,7 @@ Click username in bottom left corner -> Admin panel -> Images.
 
 Enter the following.
 
+```
 URL: http://stable-diffusion-webui:8080
 Api Auth String: The username and password combination set in the .env file.
+```
