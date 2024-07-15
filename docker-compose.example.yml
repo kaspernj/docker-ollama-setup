@@ -31,7 +31,7 @@ services:
       - ./open-webui:/app/backend/data
   stable-diffusion-webui:
     image: universonic/stable-diffusion-webui:minimal
-    command: --no-half --no-half-vae --precision full --api --api-auth ${STABLE_DIFFUSION_API_AUTH}
+    command: --no-half --no-half-vae --precision full --api --api-auth username:0190ac7d271a75c59bfb-63f44129f3f7
     networks:
       default:
         ipv4_address: 34.0.0.4
