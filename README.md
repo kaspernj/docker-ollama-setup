@@ -6,6 +6,12 @@ To setup Nvidia for Docker follow the instructions here: https://docs.nvidia.com
 
 ## Stable Diffusion in OpenWebUI
 
+After running `docker compose up` initially, shut it off and run this command:
+
+```bash
+chmod 777 stable-diffusion/models/
+```
+
 Click username in bottom left corner -> Admin panel -> Images.
 
 Enter the following.
