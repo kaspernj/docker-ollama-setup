@@ -1,6 +1,6 @@
 services:
   ollama:
-    image: ollama/ollama:0.3.11
+    image: ollama/ollama:0.4.1
     networks:
       default:
         ipv4_address: 34.0.0.2
