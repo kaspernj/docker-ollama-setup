@@ -1,12 +1,19 @@
 services:
-  ollama:
-    image: ollama/ollama:0.7.1
+  ollama-nvidia:
+    image: ollama/ollama:${OLLAMA_TAG}
+    profiles: ["nvidia"]
+    environment:
+      OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH}
     networks:
       default:
         ipv4_address: 34.0.0.2
+        aliases:
+          - ollama
+    group_add:
+      - 226
     restart: unless-stopped
     volumes:
-      - ./ollama:/root/.ollama
+      - ${OLLAMA_DATA_DIR}:/root/.ollama
     deploy:
       resources:
         reservations:
@@ -14,11 +21,30 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+  ollama-rocm:
+    image: ollama/ollama:${OLLAMA_TAG}-rocm
+    profiles: ["rocm"]
+    environment:
+      OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH}
+    networks:
+      default:
+        ipv4_address: 34.0.0.2
+        aliases:
+          - ollama
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    group_add:
+      - 44
+      - 109
+      - 226
+    security_opt:
+      - seccomp:unconfined
+    restart: unless-stopped
+    volumes:
+      - ${OLLAMA_DATA_DIR}:/root/.ollama
   openwebui:
     image: ghcr.io/open-webui/open-webui:main
-    depends_on:
-      - ollama
-      - stable-diffusion-webui
     environment:
       OLLAMA_BASE_URL: http://ollama:11434
     networks:
@@ -29,12 +55,18 @@ services:
     restart: unless-stopped
     volumes:
       - ./open-webui:/app/backend/data
-  stable-diffusion-webui:
-    image: universonic/stable-diffusion-webui:minimal
-    command: --no-half --no-half-vae --precision full --api --api-auth ${STABLE_DIFFUSION_API_AUTH}
+  stable-diffusion-webui-nvidia:
+    image: ghcr.io/ai-dock/stable-diffusion-webui:latest-cuda
+    profiles: ["nvidia"]
+    environment:
+      WEBUI_ARGS: --no-half --no-half-vae --precision full --api --api-auth ${STABLE_DIFFUSION_API_AUTH}
     networks:
       default:
         ipv4_address: 34.0.0.4
+        aliases:
+          - stable-diffusion-webui
+    group_add:
+      - 226
     runtime: nvidia
     restart: unless-stopped
     volumes:
@@ -61,6 +93,34 @@ services:
           devices:
             - driver: nvidia
               capabilities: [gpu]
+  stable-diffusion-webui-rocm:
+    image: ghcr.io/ai-dock/stable-diffusion-webui:latest-rocm
+    profiles: ["rocm"]
+    environment:
+      WEBUI_ARGS: --no-half --no-half-vae --precision full --api --api-auth ${STABLE_DIFFUSION_API_AUTH}
+    networks:
+      default:
+        ipv4_address: 34.0.0.4
+        aliases:
+          - stable-diffusion-webui
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    group_add:
+      - 44
+      - 109
+      - 226
+    security_opt:
+      - seccomp:unconfined
+    restart: unless-stopped
+    volumes:
+      - ./stable-diffusion/inputs:/workspace/input
+      - ./stable-diffusion/textual_inversion_templates:/workspace/storage/stable_diffusion/models/textual_inversion_templates
+      - ./stable-diffusion/embeddings:/workspace/storage/stable_diffusion/models/embeddings
+      - ./stable-diffusion/extensions:/workspace/storage/stable_diffusion/models/extensions
+      - ./stable-diffusion/models:/workspace/storage/stable_diffusion/models
+      - ./stable-diffusion/localizations:/workspace/storage/stable_diffusion/models/localizations
+      - ./stable-diffusion/outputs:/workspace/output
 networks:
   default:
     ipam:
